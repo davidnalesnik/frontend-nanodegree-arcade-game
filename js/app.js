@@ -1,42 +1,21 @@
+var dimensions = {
+    boardWidth: 505,
+    boardHeight: 606,
+    tileWidth: 101,
+    enemyWidth: 101,
+    tileFullHeight: 101,
+    tileOverlappedHeight: 83
+};
+
 /** ENEMY **/
 
-// TODO: put some of these functions within class or prototype!!!!
-
-// TODO: make variables for some magic numbers?
-
 // TODO: make Enemy.y create itself automatically from Enemy.row
-
-
-// Return a random row for an enemy bug.  Possible rows are numbered 1, 2,
-// or 3 (top row of game board is considered 0).
-function getEnemyRow() {
-    return Math.ceil(Math.random() * 3);
-}
-
-// Given a row number, calculate a Y coordinate.
-function getEnemyYCoord(row) {
-    var rowTotalHeight = 101;
-    var rowOverlappedHeight = 83;
-    var offset = 5;
-    var tileOverlap = rowTotalHeight - rowOverlappedHeight;
-    // Bug may occupy rows 1-3 (counting from top = 0)
-    // row 0 drawn at y = 0, row 1 at y = 1 * 83, etc.
-    var yPos = row * rowOverlappedHeight;
-    // correct for different alignment of bug relative to image height
-    yPos -= tileOverlap + offset;
-    return yPos;
-}
-
-// Get a random rate for a bug.
-function getEnemyRate() {
-    var basePixelsPerSecond = 60;
-    var multiplier = Math.ceil(Math.random() * 4);
-    return basePixelsPerSecond * multiplier;
-}
 
 // For bug-bug collision detection.  What bugs are in this lane?  Note: this will
 // include our bug if lane is passed this.row.  May need to check for this
 // in caller.
+
+// This is used by both Enemy and Player, so add to both prototypes or leave global?
 function laneContents(lane) {
     var contents = [];
     for (var idx = 0; idx < allEnemies.length; idx++) {
@@ -47,30 +26,7 @@ function laneContents(lane) {
     return contents;
 }
 
-// Would moving a bug into this lane be bug-collision free?
-function canMoveHere(enemy, lane) {
-    var contents = laneContents(lane);
-    for (var idx = 0; idx < contents.length; idx++) {
-        if (contents[idx].x >= enemy.x && contents[idx].x - enemy.x < 101)
-        return false;
-    }
-    return true;
-}
 
-// Off-screen collisions.  We randomly assign a lane for bug introduction, so
-// overlaps can occur.  There is more than one way to solve this.  Here, we check
-// our lane for an off-screen or partially off-screen enemy, and set 'x' of our
-// new bug to be behind it.  Collision detection will then handle any
-// differences of speed.
-function initialBugX() {
-    if (allEnemies.length == 0) { return -101; }
-    for (var idx = 0; idx < allEnemies.length; idx++) {
-        if (allEnemies[idx].row == this.row && allEnemies[idx].x < 0) {
-            // at least 2 bug-lengths separation
-            return allEnemies[idx].x - 202;
-        } else { return -101; }
-    }
-}
 
 // Enemies our player must avoid
 var Enemy = function(row) {
@@ -82,18 +38,66 @@ var Enemy = function(row) {
     // accidentally stacked in the same row.  Not necessary now.
     if (row) {
         this.row = row;
-    } else { this.row = getEnemyRow(); }
-    this.y = getEnemyYCoord(this.row);
-    // negative number no bigger than -101 so bug emerges from left
-    this.x = initialBugX();
-    this.speed = getEnemyRate();
+    } else { this.row = this.getEnemyRow(); }
+    this.y = this.getEnemyYCoord();
+    this.x = this.initialBugX();
+    this.speed = this.getEnemyRate();
 
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
     this.sprite = 'images/enemy-bug.png';
-
     allEnemies.push(this);
 };
+
+// Return a random row for an enemy bug.  Possible rows are numbered 1, 2,
+// or 3 (top row of game board is considered 0).
+Enemy.prototype.getEnemyRow = function() {
+    return Math.ceil(Math.random() * 3);
+};
+
+// Assign negative number no bigger than enmeyWidth so bug emerges from off-screen.
+// Since lanes are randomly assigned, there is a chance that bugs may overlap.
+// To prevent this, we check our lane for an off-screen or partially off-screen
+// enemy, and put our new bug behind it.  Collision detection will then handle any
+// differences of speed.
+Enemy.prototype.initialBugX = function() {
+    if (allEnemies.length == 0) { return -dimensions.enemyWidth; }
+    for (var idx = 0; idx < allEnemies.length; idx++) {
+        if (allEnemies[idx].row == this.row && allEnemies[idx].x < 0) {
+            // at least 2 bug-lengths separation
+            return allEnemies[idx].x - dimensions.enemyWidth * 2;
+        } else { return -dimensions.enemyWidth; }
+    }
+};
+
+// Determine enemy's vertical position based on row.
+Enemy.prototype.getEnemyYCoord = function() {
+    var offset = 5;
+    var tileOverlap = dimensions.tileFullHeight - dimensions.tileOverlappedHeight;
+    var yPos = this.row * dimensions.tileOverlappedHeight;
+    // correct for different alignment of bug relative to image height
+    yPos -= tileOverlap + offset;
+    return yPos;
+};
+
+// Get a random rate for a bug.
+// TODO: introduce factor to speed up game.
+Enemy.prototype.getEnemyRate = function() {
+    var basePixelsPerSecond = 60;
+    var multiplier = Math.ceil(Math.random() * 4);
+    return basePixelsPerSecond * multiplier;
+};
+
+// Would moving a bug into this lane be bug-collision free?
+Enemy.prototype.canMoveHere = function(lane) {
+    var contents = laneContents(lane);
+    for (var idx = 0; idx < contents.length; idx++) {
+        if (contents[idx].x >= this.x &&
+            contents[idx].x - this.x < dimensions.enemyWidth)
+        return false;
+    }
+    return true;
+}
 
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
@@ -103,10 +107,18 @@ Enemy.prototype.update = function(dt) {
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
     // all computers.
+
     this.x += this.speed * dt;
 
     // When a bug goes off screen, remove it and create a fresh bug.
-    if (this.x > 505) {
+    // By the logic of the scenario, it is a new bug that emerges from
+    // the left.  The bug that left the screen presumably keeps on going.
+    // Drawback: new bugs are no longer accessible through a variable.
+    // Advantage: we can vary the number of bugs midstream.
+    // Hmmm.  We're just making an object unreferenceable; waste of memory?
+    // Will GC take care of this?
+    // there are six objects kept in memory: first three bugs and three created
+    if (this.x > dimensions.boardWidth) {
         allEnemies.splice(allEnemies.indexOf(this), 1);
         new Enemy();
     }
@@ -119,7 +131,7 @@ Enemy.prototype.update = function(dt) {
     for (var idx = 0; idx < inMyLane.length; idx++) {
         if (inMyLane[idx] != this &&
         inMyLane[idx].x >= this.x &&
-        inMyLane[idx].x - this.x <= 101) {
+        inMyLane[idx].x - this.x <= dimensions.enemyWidth) {
             dodge = true;
             avoidMe = idx;
             break;
@@ -127,13 +139,13 @@ Enemy.prototype.update = function(dt) {
     }
     if (dodge) {
         if ((this.row == 3 || this.row == 2) &&
-        canMoveHere(this, this.row - 1)) {
+        this.canMoveHere(this.row - 1)) {
             this.row -= 1;
-            this.y = getEnemyYCoord(this.row);
+            this.y = this.getEnemyYCoord();
         } else if ((this.row == 1 || this.row == 2) &&
-        canMoveHere(this, this.row + 1)) {
+        this.canMoveHere(this.row + 1)) {
             this.row += 1;
-            this.y = getEnemyYCoord(this.row);
+            this.y = this.getEnemyYCoord();
             } else {
             var temp = this.speed;
             this.speed = inMyLane[avoidMe].speed;
@@ -154,24 +166,21 @@ Enemy.prototype.render = function() {
 // a handleInput() method.
 
 // Since there is only one player, no need for messing with prototype?
-function setPlayerX(col) {
-    return col * 101;
-}
-
-function setPlayerY(row) {
-    var alignedWithTile = 83;
-    var offset = 30;
-    return row * alignedWithTile - offset;
-}
 
 var Player = function() {
     this.col = 2;
     this.row = 5;
-    // Note: this.x and this.y are set by Player.prototype.update()
-    // this.x = 202;
-    // this.y = 415;
     this.madeIt = false;
     this.player = 'images/char-boy.png';
+};
+
+Player.prototype.setPlayerX = function() {
+    return this.col * dimensions.tileWidth;
+};
+
+Player.prototype.setPlayerY = function() {
+    var offset = 30;
+    return this.row * dimensions.tileOverlappedHeight - offset;
 };
 
 // If player and bug collide, return true, otherwise false.
@@ -179,7 +188,7 @@ Player.prototype.detectCollision = function() {
     // bugs in our row
     var potentials = laneContents(this.row);
     for (var idx = 0; idx < potentials.length; idx++) {
-        if ((Math.max(this.x, potentials[idx].x) - Math.min(this.x, potentials[idx].x)) <= 101) {
+        if ((Math.max(this.x, potentials[idx].x) - Math.min(this.x, potentials[idx].x)) <= dimensions.enemyWidth) {
             return true;
         }
     }
@@ -192,7 +201,7 @@ Player.prototype.update = function() {
         this.row = 5;
         console.log('you made it');
         score.inc(); // NB
-        // TODO: update score; delay? ; update speed variable based on number of successes
+        // TODO: update speed variable based on number of successes
         // reset
         this.madeIt = false;
     }
@@ -201,8 +210,8 @@ Player.prototype.update = function() {
         this.col = 2;
         this.row = 5;
     }
-    this.x = setPlayerX(this.col);
-    this.y = setPlayerY(this.row);
+    this.x = this.setPlayerX();
+    this.y = this.setPlayerY();
 };
 
 Player.prototype.render = function() {
@@ -237,7 +246,7 @@ var Score = function() {
         ctx.font = '30px Verdana';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'top';
-        ctx.fillText(this.score, 490, 55);
+        ctx.fillText(this.score, dimensions.boardWidth - 15, 55);
     };
 };
 
@@ -248,9 +257,11 @@ var Score = function() {
 // Place the player object in a variable called player
 
 var allEnemies = [];
-var enemyFirst = new Enemy(1);
-var enemySecond = new Enemy(2);
-var enemyThird = new Enemy(3);
+// NOTE: We don't assign instances to global variables.  They will not
+// be garbage collected.
+new Enemy(1);
+new Enemy(2);
+new Enemy(3);
 
 var player = new Player();
 
