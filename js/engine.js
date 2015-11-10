@@ -72,6 +72,8 @@ var Engine = (function(global) {
         * game loop.
     */
     function init() {
+        // This is a hack to force browser to load web font.  (Without this,
+        // score and "GAME OVER" message will be rendered with fallback fonts.)
         var weights = [400, 500, 900];
         var elt;
         weights.forEach(function(weight) {

@@ -10,7 +10,11 @@ var dimensions = {
 var gameState = {
     gameOver: false,
     lives: 3,
-    livesLeft: 3
+    livesLeft: 3,
+    enemyCount: 3,
+    baseSpeed: 50, // px/sec
+    speedIncrement: 5,
+    currentBaseSpeed: 50
 };
 
 // For general collision detection.  What bugs are in this lane?  Note: returned
@@ -80,21 +84,18 @@ Enemy.prototype.initialBugX = function() {
 Enemy.prototype.getEnemyYCoord = function() {
     var tileOverlap = dimensions.tileFullHeight - dimensions.tileOverlappedHeight;
     var yPos = this.row * dimensions.tileOverlappedHeight;
-    // correct for different alignment of bug relative to image height; 5
-    // is eyeball factor.
+    // correct for different alignment of bug relative to image height; 5 is
+    // eyeball factor.
     yPos -= tileOverlap + 5;
     return yPos;
 };
 
 // Get a random rate for a bug.
-// TODO: introduce factor to speed up game.
 Enemy.prototype.getEnemyRate = function() {
-    var basePixelsPerSecond = 60;
-    // speed up with every 5 wins
-    var levelOffset = Math.floor(winCount / 5) * 20;
     // speeds range from 1x through 4x
     var multiplier = Math.ceil(Math.random() * 4);
-    return basePixelsPerSecond * multiplier + levelOffset;
+    console.log(gameState.currentBaseSpeed * multiplier);
+    return gameState.currentBaseSpeed * multiplier;
 };
 
 // Would moving a bug into this lane be bug-collision free?
@@ -122,6 +123,14 @@ Enemy.prototype.update = function(dt) {
     if (this.x > dimensions.boardWidth) {
         allEnemies.splice(allEnemies.indexOf(this), 1);
         new Enemy();
+    }
+    // When level gets high enough, increase the number of bugs.
+    // Decrease speed to initial level when this happens.
+    if ((winCount == 20 && gameState.enemyCount == 3) ||
+    (winCount == 30 && gameState.enemyCount == 4)) {
+        new Enemy();
+        gameState.enemyCount += 1;
+        gameState.currentBaseSpeed = gameState.baseSpeed;
     }
     // Don't allow bugs in the same lane to overlap.  Move to a usable (adjacent)
     // lane.  If this isn't possible, stay in the current lane, exchanging speeds
@@ -205,7 +214,10 @@ Player.prototype.update = function() {
         this.col = 2;
         this.row = 5;
         winCount += 1;
-        console.log('you made it');
+        // speed up with increasing level
+        if (winCount % 5 == 0) {
+            gameState.currentBaseSpeed += gameState.speedIncrement;
+        }
         score.update(10);
         // set flag to reset
         this.madeIt = false;
