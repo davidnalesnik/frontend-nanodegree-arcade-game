@@ -177,10 +177,8 @@ var Engine = (function(global) {
     }
 
     function renderLives() {
-        ctx.fillStyle = '#7f525d';
-        ctx.textAlign = 'bottom';
         for(var idx = 0; idx < gameState.livesLeft; idx++) {
-            ctx.fillRect(10 + idx * 20, 555, 10, 20);
+            ctx.drawImage(Resources.get('images/char-boy-small.png'), idx * 33, 516);
         }
     }
 
@@ -210,7 +208,8 @@ var Engine = (function(global) {
         'images/water-block.png',
         'images/grass-block.png',
         'images/enemy-bug.png',
-        'images/char-boy.png'
+        'images/char-boy.png',
+        'images/char-boy-small.png'
     ]);
     Resources.onReady(init);
 
