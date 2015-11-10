@@ -2,10 +2,3 @@ body {
     text-align: center;
     font-family: "Roboto", sans-serif;
 }
-
-/* This is part of a hack to force web font to load so it is available within canvas */
-h6 {
-    position: absolute;
-    left: -10px;
-    bottom: -10px;
-}

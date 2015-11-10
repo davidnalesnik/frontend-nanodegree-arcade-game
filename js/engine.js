@@ -72,6 +72,15 @@ var Engine = (function(global) {
         * game loop.
     */
     function init() {
+        var weights = [400, 500, 900];
+        var elt;
+        weights.forEach(function(weight) {
+            elt = document.createElement('span');
+            elt.innerHTML = '.';
+            elt.style.font = weight + ' 0px Roboto';
+            doc.body.appendChild(elt);
+        });
+
         reset();
         lastTime = Date.now();
         main();
