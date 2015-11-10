@@ -152,6 +152,7 @@ var Engine = (function(global) {
 
         renderEntities();
         renderScore();
+        renderLives();
     }
 
     /*
@@ -175,6 +176,14 @@ var Engine = (function(global) {
         score.render();
     }
 
+    function renderLives() {
+        ctx.fillStyle = '#7f525d';
+        ctx.textAlign = 'bottom';
+        for(var idx = 0; idx < gameState.livesLeft; idx++) {
+            ctx.fillRect(10 + idx * 20, 555, 10, 20);
+        }
+    }
+
     /*
         * This function does nothing but it could have been a good place to
         * handle game reset states - maybe a new game menu or a game over screen
@@ -184,6 +193,7 @@ var Engine = (function(global) {
         if (gameState.gameOver) {
             console.log('GAME END!');
             win.cancelAnimationFrame(main);
+            ctx.font = '900 48px Roboto';
             ctx.fillStyle = 'red';
             ctx.textAlign = 'center';
             ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);

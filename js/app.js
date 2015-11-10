@@ -245,12 +245,12 @@ var Score = function() {
     this.score = 0;
     this.update = function(offset) {
         this.score += offset;
-        //if (this.score < 0) { gameState.gameOver = true; }
     };
     this.render = function() {
-        ctx.font = '30px Verdana';
+        ctx.font = '400 30px Roboto';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'top';
+        ctx.fillStyle = 'white';
         ctx.fillText(this.score, dimensions.boardWidth - 15, 55);
     };
 };
