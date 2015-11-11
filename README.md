@@ -18,10 +18,10 @@ lose all your turns, the game ends.  You can hit the refresh button in your
 browser to restart.
 
 The beetles move at random rates.  Because their speeds are variable, they
-will occasionally change lanes to avoid beetles in their way&emdash;not you, of
+will occasionally change lanes to avoid beetles in their way&mdash;not you, of
 course! As you make more successful crossings, the average beetle speed will
 increase.  The number of beetles will also increase from three at the beginning
-to five (though speed will mercifully drop when a beetle is added&emdash;only
+to five (though speed will mercifully drop when a beetle is added&mdash;only
 to rise again).
 
 Enjoy!
