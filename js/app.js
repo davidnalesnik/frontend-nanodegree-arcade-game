@@ -251,21 +251,32 @@ Player.prototype.handleInput = function (request) {
     gameState.markTile[0] = -1;
     gameState.markTile[1] = -1;
     // Honor requests but do not allow player to move off board.
-    if (request === 'left' && this.col > 0)
-        this.col -= 1;
-    if (request === 'right' && this.col < 4)
-        this.col += 1;
-    if (request === 'down' && this.row < 5)
-        this.row += 1;
-    // Signal a success if we get to top, but don't draw player over the water.
-    // The reason for this is that player's head emerges above the canvas, so
-    // it will not be erased when canvas is redrawn.
-    if (request === 'up') {
+    switch (request) {
+    case 'left':
+        if (this.col > 0) {
+            this.col -= 1;
+        }
+        break;
+    case 'right':
+        if (this.col < 4) {
+            this.col += 1;
+        }
+        break;
+    case 'down':
+        if (this.row < 5) {
+            this.row += 1;
+        }
+        break;
+    case 'up':
+        // Signal a success if we get to top, but don't draw player over the water.
+        // The reason for this is that player's head emerges above the canvas, so
+        // it will not be erased when canvas is redrawn.
         if (this.row == 1) {
             this.madeIt = true;
         } else {
             this.row -= 1;
         }
+        break;
     }
 };
 
