@@ -16,7 +16,7 @@ var gameState = {
     baseSpeed : 30, // px/sec
     speedIncrement : 10,
     currentBaseSpeed : 30,
-    markTile : [-1. -1] // used to signal new tile image for win; -1 is unmarked
+    markTile : [-1, -1]// used to signal new tile image for win; -1 is unmarked
 };
 
 // For general collision detection.  What bugs are in this lane?  Note: returned
@@ -235,9 +235,10 @@ Player.prototype.update = function () {
         gameState.livesLeft -= 1;
         if (gameState.livesLeft == 0) {
             gameState.gameOver = true;
+        } else {
+            this.col = 2;
+            this.row = 5;
         }
-        this.col = 2;
-        this.row = 5;
     }
     this.x = this.setPlayerX();
     this.y = this.setPlayerY();
