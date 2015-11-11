@@ -224,7 +224,7 @@ Player.prototype.update = function() {
         this.madeIt = false;
     }
     // We're hit
-    if (this.detectCollision()) {
+    if (this.row < 4 && this.detectCollision()) {
         if (score > 0) { score.update(-10); }
         gameState.livesLeft -= 1;
         if (gameState.livesLeft == 0) { gameState.gameOver = true; }
