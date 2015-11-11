@@ -5,7 +5,7 @@ This is a reimagination of the classic arcade game *Frogger* in which you (who
 are not a frog) cross a busy street to reach the water.  Your obstacles are not
 cars and trucks; instead, they are beetles.
 
-**How to Play
+**How to Play**
 
 Start the game in your browser by opening the file index.html.
 
@@ -24,4 +24,3 @@ The number of beetles will also increase from three at the beginning to five
 (though speed will mercifully drop when a beetle is added--only to rise again).
 
 Enjoy!
-
