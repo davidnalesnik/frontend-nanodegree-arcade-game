@@ -12,6 +12,7 @@ var gameState = {
     gameOver : false,
     lives : 3,
     livesLeft : 3,
+    winCount : 0,
     enemyCount : 3,
     baseSpeed : 30, // px/sec
     speedIncrement : 10,
@@ -56,9 +57,6 @@ var Enemy = function (row) {
     this.sprite = 'images/enemy-bug.png';
     allEnemies.push(this);
 };
-
-// How may times did player reach the water?  Used to set the level.
-var winCount = 0;
 
 // Return a random row for an enemy bug.  Possible rows are numbered 1, 2,
 // or 3 (top row of game board is considered 0).
@@ -132,8 +130,8 @@ Enemy.prototype.update = function (dt) {
     }
     // When level gets high enough, increase the number of bugs.
     // Decrease speed to initial level when this happens.
-    if ((winCount == 20 && gameState.enemyCount == 3) ||
-        (winCount == 30 && gameState.enemyCount == 4)) {
+    if ((gameState.winCount == 20 && gameState.enemyCount == 3) ||
+        (gameState.winCount == 30 && gameState.enemyCount == 4)) {
         new Enemy();
         gameState.enemyCount += 1;
         gameState.currentBaseSpeed = gameState.baseSpeed;
@@ -221,9 +219,9 @@ Player.prototype.update = function () {
         gameState.markTile[1] = 0;
         this.col = 2;
         this.row = 5;
-        winCount += 1;
+        gameState.winCount += 1;
         // speed up with increasing level
-        if (winCount % 5 == 0) {
+        if (gameState.winCount % 5 == 0) {
             gameState.currentBaseSpeed += gameState.speedIncrement;
         }
         score.update(10);
