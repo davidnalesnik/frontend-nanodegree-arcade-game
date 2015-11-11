@@ -2,6 +2,7 @@ var dimensions = {
     boardWidth: 505,
     boardHeight: 606,
     tileWidth: 101,
+    playerWidth: 60, // adjust for precision of collision detection
     enemyWidth: 101,
     tileFullHeight: 101,
     tileOverlappedHeight: 83
@@ -12,9 +13,9 @@ var gameState = {
     lives: 3,
     livesLeft: 3,
     enemyCount: 3,
-    baseSpeed: 50, // px/sec
-    speedIncrement: 5,
-    currentBaseSpeed: 50
+    baseSpeed: 30, // px/sec
+    speedIncrement: 10,
+    currentBaseSpeed: 30
 };
 
 // For general collision detection.  What bugs are in this lane?  Note: returned
@@ -202,7 +203,7 @@ Player.prototype.detectCollision = function() {
     for (var idx = 0; idx < potentials.length; idx++) {
         // Distance between left edge of enemy and player is less than
         // enemy's width ==> collision
-        if ((Math.max(this.x, potentials[idx].x) - Math.min(this.x, potentials[idx].x)) <= dimensions.enemyWidth) {
+        if ((Math.max(this.x, potentials[idx].x) - Math.min(this.x, potentials[idx].x)) <= dimensions.playerWidth) {
             return true;
         }
     }
