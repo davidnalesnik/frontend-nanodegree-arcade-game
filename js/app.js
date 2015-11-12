@@ -20,6 +20,20 @@ var gameState = {
     markTile : [-1, -1]// used to signal new tile image for win; -1 is unmarked
 };
 
+var startTimer = false;
+var rep;
+
+function doAfterFrames(frameCount, fn) {
+    return function () {
+        if (frameCount > 0) {
+            frameCount -= 1;
+        } else {
+            fn();
+            rep = undefined;
+        }
+    }
+}
+
 // For general collision detection.  What bugs are in this lane?  Note: returned
 // object will include our bug if function is passed this.row after creation.
 // May need to check for this in caller.  As this function is used by both
@@ -98,7 +112,6 @@ Enemy.prototype.getEnemyYCoord = function () {
 Enemy.prototype.getEnemyRate = function () {
     // speeds range from 1x through 4x
     var multiplier = Math.ceil(Math.random() * 4);
-    console.log(gameState.currentBaseSpeed * multiplier);
     return gameState.currentBaseSpeed * multiplier;
 };
 
@@ -225,6 +238,7 @@ Player.prototype.update = function () {
             gameState.currentBaseSpeed += gameState.speedIncrement;
         }
         score.update(10);
+        startTimer = true;
         // set flag to reset
         this.madeIt = false;
     }
@@ -248,8 +262,8 @@ Player.prototype.render = function () {
 
 Player.prototype.handleInput = function (request) {
     // for now, change win tile back when player moves again
-    gameState.markTile[0] = -1;
-    gameState.markTile[1] = -1;
+    //gameState.markTile[0] = -1;
+    // gameState.markTile[1] = -1;
     // Honor requests but do not allow player to move off board.
     switch (request) {
     case 'left':

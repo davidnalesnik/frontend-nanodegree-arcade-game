@@ -146,6 +146,17 @@ var Engine = (function (global) {
         row,
         col;
 
+        if (startTimer === true) {
+            startTimer = false;
+            rep = doAfterFrames(30, function () {
+                    gameState.markTile[0] = -1;
+                    gameState.markTile[1] = -1;
+                });
+        }
+        if (typeof(rep) === 'function') {
+            rep();
+        }
+
         /*
          * Loop through the number of rows and columns we've defined above
          * and, using the rowImages array, draw the correct image for that
@@ -207,7 +218,6 @@ var Engine = (function (global) {
      */
     function reset() {
         if (gameState.gameOver) {
-            console.log('GAME END!');
             win.cancelAnimationFrame(main);
             ctx.font = '900 48px Roboto';
             ctx.fillStyle = 'red';
