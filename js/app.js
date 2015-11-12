@@ -1,3 +1,4 @@
+// Cache various measurements frequently used in calculations.
 var dimensions = {
     boardWidth : 505,
     boardHeight : 606,
@@ -8,6 +9,7 @@ var dimensions = {
     tileOverlappedHeight : 83
 };
 
+// Cache information describing the game in progress.
 var gameState = {
     gameOver : false,
     lives : 3,
@@ -17,22 +19,9 @@ var gameState = {
     baseSpeed : 30, // px/sec
     speedIncrement : 10,
     currentBaseSpeed : 30,
-    markTile : [-1, -1]// used to signal new tile image for win; -1 is unmarked
+    markTile : [-1, -1], // used to signal new tile image for win; -1 is unmarked
+    tileTimer : false
 };
-
-var startTimer = false;
-var rep;
-
-function doAfterFrames(frameCount, fn) {
-    return function () {
-        if (frameCount > 0) {
-            frameCount -= 1;
-        } else {
-            fn();
-            rep = undefined;
-        }
-    }
-}
 
 // For general collision detection.  What bugs are in this lane?  Note: returned
 // object will include our bug if function is passed this.row after creation.
@@ -48,7 +37,9 @@ function laneContents(lane) {
     return contents;
 }
 
-/** ENEMY **/
+/**************************************************************
+ **************************** ENEMY ***************************
+ **************************************************************/
 
 // Enemies our player must avoid
 var Enemy = function (row) {
@@ -187,7 +178,9 @@ Enemy.prototype.render = function () {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-/** PLAYER **/
+/**************************************************************
+ **************************** PLAYER **************************
+ **************************************************************/
 
 // Now write your own player class
 // This class requires an update(), render() and
@@ -238,7 +231,10 @@ Player.prototype.update = function () {
             gameState.currentBaseSpeed += gameState.speedIncrement;
         }
         score.update(10);
-        startTimer = true;
+        gameState.tileTimer = new Timer(30, function () {
+                gameState.markTile[0] = -1;
+                gameState.markTile[1] = -1;
+            });
         // set flag to reset
         this.madeIt = false;
     }
@@ -261,9 +257,6 @@ Player.prototype.render = function () {
 };
 
 Player.prototype.handleInput = function (request) {
-    // for now, change win tile back when player moves again
-    //gameState.markTile[0] = -1;
-    // gameState.markTile[1] = -1;
     // Honor requests but do not allow player to move off board.
     switch (request) {
     case 'left':
@@ -294,7 +287,9 @@ Player.prototype.handleInput = function (request) {
     }
 };
 
-/** SCORE **/
+/**************************************************************
+ **************************** SCORE ***************************
+ **************************************************************/
 
 var Score = function () {
     this.score = 0;
@@ -310,7 +305,32 @@ var Score = function () {
     };
 };
 
-/** INSTANTIATE OBJECTS **/
+/**************************************************************
+ **************************** TIMER ***************************
+ **************************************************************/
+
+// Create objects which time a function call with the number of frames
+// elapsed.  After a specified number of frames, a function is called.
+// This takes advantage of the requestAnimationFrame loop in progress,
+// avoiding usage of setTimeout, which is not synchronized with screen redraw.
+
+var Timer = function (frameCount, exitFunction) {
+    this.frameCount = frameCount;
+    this.exitFunction = exitFunction || function () {};
+};
+
+// Call this function once per frame.
+Timer.prototype.decrementer = function () {
+    if (this.frameCount > 0) {
+        this.frameCount -= 1;
+    } else {
+        this.exitFunction();
+    }
+};
+
+/**************************************************************
+ ******************** INSTANTIATE OBJECTS *********************
+ **************************************************************/
 
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies

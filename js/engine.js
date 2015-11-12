@@ -146,15 +146,14 @@ var Engine = (function (global) {
         row,
         col;
 
-        if (startTimer === true) {
-            startTimer = false;
-            rep = doAfterFrames(30, function () {
-                    gameState.markTile[0] = -1;
-                    gameState.markTile[1] = -1;
-                });
-        }
-        if (typeof(rep) === 'function') {
-            rep();
+        /*
+         * When we find a tile timer, decrement it.  When a number of frames
+         * has passed, gameState.markTile will be set to [-1, -1], indicating
+         * that loop below should draw the default water tile.
+         */
+
+        if (gameState.tileTimer) {
+            gameState.tileTimer.decrementer();
         }
 
         /*
