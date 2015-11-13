@@ -1,26 +1,34 @@
-// Cache various measurements frequently used in calculations.
+// cache of various measurements frequently used in calculations
 var dimensions = {
     boardWidth : 505,
     boardHeight : 606,
     tileWidth : 101,
-    playerWidth : 60, // adjust for precision of collision detection
+    // adjust for precision of collision detection
+    playerWidth : 60,
     enemyWidth : 101,
     tileFullHeight : 101,
     tileOverlappedHeight : 83
 };
 
-// Cache information describing the game in progress.
+// cache of information describing the game in progress
 var gameState = {
     gameOver : false,
     lives : 3,
     livesLeft : 3,
+    // how many times player has reached the water
     winCount : 0,
+    // When array contains row and column numbers, an image change for a water
+    // tile is signalled.
+    markTile : [-1, -1],
+    // When water tile has been changed, this holds a Timer object.
+    tileTimer : false,
     enemyCount : 3,
-    baseSpeed : 30, // px/sec
+    // initial enenmy speed in px/sec; return to this when enemy added
+    baseSpeed : 30,
+    // how much enemy speed will be boosted with each arrival at water
     speedIncrement : 10,
-    currentBaseSpeed : 30,
-    markTile : [-1, -1], // used to signal new tile image for win; -1 is unmarked
-    tileTimer : false
+    // slowest enemy speed at the moment
+    currentBaseSpeed : 30
 };
 
 // For general collision detection.  What bugs are in this lane?  Note: returned
@@ -45,9 +53,8 @@ function laneContents(lane) {
 var Enemy = function (row) {
 
     // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
+    // we've provided one for you to get started (this.sprite)
 
-    // Row may be specified.
     if (row) {
         this.row = row;
     } else {
@@ -60,6 +67,7 @@ var Enemy = function (row) {
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
     this.sprite = 'images/enemy-bug.png';
+
     allEnemies.push(this);
 };
 
@@ -80,12 +88,15 @@ Enemy.prototype.initialBugX = function () {
     if (maybeColliding.length == 0) {
         return finalX;
     }
+    // If there are other bugs in our row, set our bug's position relative
+    // to the leftmost bug.
     var leftmostX = 0;
     for (var idx = 0; idx < maybeColliding.length; idx++) {
         if (maybeColliding[idx] != this && maybeColliding[idx].x < leftmostX) {
             leftmostX = maybeColliding[idx].x;
         }
     }
+    // Ensure at least one bug-width clearance for our bug.
     return finalX + leftmostX - dimensions.enemyWidth;
 };
 
@@ -93,8 +104,7 @@ Enemy.prototype.initialBugX = function () {
 Enemy.prototype.getEnemyYCoord = function () {
     var tileOverlap = dimensions.tileFullHeight - dimensions.tileOverlappedHeight;
     var yPos = this.row * dimensions.tileOverlappedHeight;
-    // correct for different alignment of bug relative to image height; 5 is
-    // eyeball factor.
+    // Correct for different alignment of bug relative to image height.
     yPos -= tileOverlap + 5;
     return yPos;
 };
@@ -118,8 +128,7 @@ Enemy.prototype.canMoveHere = function (lane) {
 }
 
 // Update the enemy's position, required method for game
-// Parameter: dt, a time delta between ticks
-// dt is number of elapsed _seconds_; animation frame 60/sec
+// Parameter: dt, a time delta between ticks (elapsed seconds)
 Enemy.prototype.update = function (dt) {
 
     // You should multiply any movement by the dt parameter
@@ -134,8 +143,9 @@ Enemy.prototype.update = function (dt) {
     }
     // When level gets high enough, increase the number of bugs.
     // Decrease speed to initial level when this happens.
-    if ((gameState.winCount == 20 && gameState.enemyCount == 3) ||
-        (gameState.winCount == 30 && gameState.enemyCount == 4)) {
+    if ((gameState.winCount == 10 && gameState.enemyCount == 3) ||
+        (gameState.winCount == 20 && gameState.enemyCount == 4) ||
+        (gameState.winCount == 30 && gameState.enemyCount == 5)) {
         new Enemy();
         gameState.enemyCount += 1;
         gameState.currentBaseSpeed = gameState.baseSpeed;
@@ -182,12 +192,6 @@ Enemy.prototype.render = function () {
  **************************** PLAYER **************************
  **************************************************************/
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
-
-// Since there is only one player, no need for messing with prototype?
-
 var Player = function () {
     this.col = 2;
     this.row = 5;
@@ -196,12 +200,11 @@ var Player = function () {
     this.player = 'images/char-boy.png';
 };
 
-Player.prototype.setPlayerX = function () {
+Player.prototype.getPlayerX = function () {
     return this.col * dimensions.tileWidth;
 };
 
-Player.prototype.setPlayerY = function () {
-    // 30 is eyeball factor
+Player.prototype.getPlayerY = function () {
     return this.row * dimensions.tileOverlappedHeight - 30;
 };
 
@@ -211,7 +214,7 @@ Player.prototype.detectCollision = function () {
     var potentials = laneContents(this.row);
     for (var idx = 0; idx < potentials.length; idx++) {
         // Distance between left edge of enemy and player is less than
-        // enemy's width ==> collision
+        // player's width ==> collision
         if ((Math.max(this.x, potentials[idx].x) - Math.min(this.x, potentials[idx].x)) <= dimensions.playerWidth) {
             return true;
         }
@@ -219,27 +222,30 @@ Player.prototype.detectCollision = function () {
     return false;
 };
 
+// Change player's position and handle consequences of position change.
 Player.prototype.update = function () {
+    // When the street is successfully crossed...
     if (this.madeIt) {
-        gameState.markTile[0] = this.col;
-        gameState.markTile[1] = 0;
+        gameState.winCount += 1;
+        score.update(10);
+        // Reset player's position.
         this.col = 2;
         this.row = 5;
-        gameState.winCount += 1;
-        // speed up with increasing level
+        // speed up after five wins
         if (gameState.winCount % 5 == 0) {
             gameState.currentBaseSpeed += gameState.speedIncrement;
         }
-        score.update(10);
+        // Set array to real values to signal image change.
+        gameState.markTile[0] = this.col;
+        gameState.markTile[1] = 0;
+        // Initiate timed change of water tile.
         gameState.tileTimer = new Timer(30, function () {
                 gameState.markTile[0] = -1;
                 gameState.markTile[1] = -1;
             });
-        // set flag to reset
+        // Do the above only once per win!
         this.madeIt = false;
-    }
-    // We're hit
-    if (this.row < 4 && this.detectCollision()) {
+    } else if (this.row < 4 && this.detectCollision()) { // We're hit!
         gameState.livesLeft -= 1;
         if (gameState.livesLeft == 0) {
             gameState.gameOver = true;
@@ -248,16 +254,19 @@ Player.prototype.update = function () {
             this.row = 5;
         }
     }
-    this.x = this.setPlayerX();
-    this.y = this.setPlayerY();
+    // Update player position for redraw.
+    this.x = this.getPlayerX();
+    this.y = this.getPlayerY();
 };
 
+// Draw the player.
 Player.prototype.render = function () {
     ctx.drawImage(Resources.get(this.player), this.x, this.y);
 };
 
+// Handler for arrow-key input.
 Player.prototype.handleInput = function (request) {
-    // Honor requests but do not allow player to move off board.
+    // Honor requests but do not allow player to move off-board.
     switch (request) {
     case 'left':
         if (this.col > 0) {
@@ -276,7 +285,7 @@ Player.prototype.handleInput = function (request) {
         break;
     case 'up':
         // Signal a success if we get to top, but don't draw player over the water.
-        // The reason for this is that player's head emerges above the canvas, so
+        // One reason for this is that player's head emerges above the canvas, so
         // it will not be erased when canvas is redrawn.
         if (this.row == 1) {
             this.madeIt = true;
@@ -312,14 +321,16 @@ var Score = function () {
 // Create objects which time a function call with the number of frames
 // elapsed.  After a specified number of frames, a function is called.
 // This takes advantage of the requestAnimationFrame loop in progress,
-// avoiding usage of setTimeout, which is not synchronized with screen redraw.
+// avoiding usage of setTimeout, which is not synchronized with screen
+// redraw.
 
 var Timer = function (frameCount, exitFunction) {
     this.frameCount = frameCount;
     this.exitFunction = exitFunction || function () {};
 };
 
-// Call this function once per frame.
+// Call this method once per frame to count timer down and eventually call
+// delayed function.
 Timer.prototype.decrementer = function () {
     if (this.frameCount > 0) {
         this.frameCount -= 1;
@@ -328,21 +339,22 @@ Timer.prototype.decrementer = function () {
     }
 };
 
+// Now instantiate your objects.
+
 /**************************************************************
  ******************** INSTANTIATE OBJECTS *********************
  **************************************************************/
 
-// Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
-
 var allEnemies = [];
+
 // NOTE: We don't assign Enemy instances to global variables.  We don't need
 // them once they're off-screen, yet they won't be garbage collected.
 new Enemy();
 new Enemy();
 new Enemy();
 
+// Place the player object in a variable called player
 var player = new Player();
 
 var score = new Score();
