@@ -5,7 +5,7 @@ This is a reimagination of the classic arcade game *Frogger* in which you (who
 are not a frog) cross a busy street to reach the water.  Your obstacles are not
 cars and trucks; instead, they are beetles.
 
-# How to Play
+## How to Play
 
 Start the game in your browser by opening the file index.html.
 
@@ -17,7 +17,7 @@ Lives remaining are displayed on the lower left of the game board.  Once you
 lose all your three turns, the game ends.  You can hit the refresh button in
 your browser to restart.
 
-# A Beetle's Life
+## A Beetle's Life
 
 The beetles move at random rates.  Because their speeds are variable, they
 will occasionally change lanes to avoid beetles in their way&mdash;not you, of

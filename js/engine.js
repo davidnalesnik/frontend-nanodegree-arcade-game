@@ -70,7 +70,8 @@ var Engine = (function (global) {
     function init() {
         // This is a hack to force browser to load web font.  (Without
         // this, score and "GAME OVER" message will be rendered with
-        // fallback fonts.) -DN
+        // fallback fonts.) Inspiration comes from discussions at http://stackoverflow.com/questions/2756575/drawing-text-to-canvas-with-font-face-does-not-work-at-the-first-time?lq=1
+        // (i.e., creating invisible DOM elements) -DN
         var weights = [400, 500, 900];
         var elt;
         weights.forEach(function (weight) {
