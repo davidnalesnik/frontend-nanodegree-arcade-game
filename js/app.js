@@ -228,6 +228,9 @@ Player.prototype.update = function () {
     if (this.madeIt) {
         gameState.winCount += 1;
         score.update(10);
+        // Set array to real values to signal image change.
+        gameState.markTile[0] = this.col;
+        gameState.markTile[1] = 0;
         // Reset player's position.
         this.col = 2;
         this.row = 5;
@@ -235,9 +238,6 @@ Player.prototype.update = function () {
         if (gameState.winCount % 5 == 0) {
             gameState.currentBaseSpeed += gameState.speedIncrement;
         }
-        // Set array to real values to signal image change.
-        gameState.markTile[0] = this.col;
-        gameState.markTile[1] = 0;
         // Initiate timed change of water tile.
         gameState.tileTimer = new Timer(30, function () {
                 gameState.markTile[0] = -1;
